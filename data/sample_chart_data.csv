@@ -1,0 +1,11 @@
+Date,Product_A_Sales,Product_B_Sales,Customer_Rating,Region,Category,Sales_Target,Customer_Satisfaction
+2024-07-27,100,50,4.5,East,Electronics,110,85
+2024-07-28,105,52,4.6,West,Clothing,55,92
+2024-07-29,110,55,4.7,East,Electronics,115,78
+2024-07-30,95,48,4.4,Central,Food,100,95
+2024-07-31,120,60,4.8,West,Clothing,65,88
+2024-08-01,115,58,4.7,East,Electronics,120,80
+2024-08-02,98,49,4.3,Central,Food,105,90
+2024-08-03,103,51,4.6,West,Clothing,60,82
+2024-08-04,108,54,4.9,East,Electronics,110,98
+2024-08-05,112,56,4.7,West,Food,70,87

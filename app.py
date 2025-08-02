@@ -6,103 +6,24 @@ from datetime import datetime, timedelta
 import base64
 
 # componentsから必要な関数をインポート
-# （このコードでは、これらの関数がapp.pyと同じディレクトリにあることを前提としています）
-# from components.graph_plotter import (
-#     plot_line_chart, plot_bar_chart, plot_stacked_bar_chart,
-#     plot_scatter_plot, plot_heatmap, PLOTLY_TEMPLATES
-# )
-# from components.data_processor import (
-#     load_and_combine_csv, calculate_and_plot_average,
-#     aggregate_and_plot_time_series, perform_advanced_statistics
-# )
-
-# --- 簡易的なダミー関数 ---
-# 実際のアプリケーションでは、別途ファイルを定義してください
-def plot_line_chart(df, x_col, y_cols, **kwargs):
-    st.write(f"折れ線グラフをプロット: X={x_col}, Y={y_cols}")
-    st.line_chart(df.set_index(x_col)[y_cols])
-
-def plot_bar_chart(df, x_col, y_col, **kwargs):
-    st.write(f"棒グラフをプロット: X={x_col}, Y={y_col}")
-    st.bar_chart(df.set_index(x_col)[y_col])
-
-def plot_stacked_bar_chart(df, x_col, y_cols, **kwargs):
-    st.write(f"積み立てグラフをプロット: X={x_col}, Y={y_cols}")
-    st.bar_chart(df.set_index(x_col)[y_cols])
-
-def plot_scatter_plot(df, x_col, y_col, **kwargs):
-    st.write(f"散布図をプロット: X={x_col}, Y={y_col}")
-    st.scatter_chart(df.set_index(x_col).loc[:, [y_col]])
-
-def plot_heatmap(df, x_col, y_col, z_col, **kwargs):
-    st.write(f"ヒートマップをプロット: X={x_col}, Y={y_col}, Z={z_col}")
-    st.warning("この簡易版ではヒートマップは表示されません。")
-
-PLOTLY_TEMPLATES = ["plotly", "ggplot2", "seaborn", "simple_white"]
-
-def load_and_combine_csv(uploaded_files):
-    df_list = []
-    for f in uploaded_files:
-        try:
-            df = pd.read_csv(f, encoding='utf-8')
-        except UnicodeDecodeError:
-            df = pd.read_csv(f, encoding='shift_jis')
-        df_list.append(df)
-    return pd.concat(df_list, ignore_index=True)
-
-def calculate_and_plot_average(df):
-    st.subheader('選択した列の平均値')
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    if not numeric_cols:
-        st.warning("数値列がありません。")
-        return
-    
-    selected_cols = st.multiselect('平均値を計算する列を選択してください:', numeric_cols)
-    if selected_cols:
-        avg_df = df[selected_cols].mean().reset_index()
-        avg_df.columns = ['列', '平均値']
-        st.dataframe(avg_df)
-        st.bar_chart(avg_df.set_index('列'))
-
-def aggregate_and_plot_time_series(df):
-    st.subheader('時系列データ集計と可視化')
-    date_cols = df.select_dtypes(include='datetime').columns.tolist()
-    if not date_cols:
-        st.warning("日付/時刻型の列が見つかりません。")
-        return
-    
-    date_col = st.selectbox('日付列を選択:', date_cols)
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    y_cols = st.multiselect('集計する数値列を選択:', numeric_cols)
-
-    if date_col and y_cols:
-        freq = st.selectbox('集計単位:', ['日', '週', '月', '年'])
-        freq_map = {'日': 'D', '週': 'W', '月': 'M', '年': 'Y'}
-        
-        agg_df = df.set_index(date_col).resample(freq_map[freq])[y_cols].sum().reset_index()
-        
-        st.write('集計後のデータ')
-        st.dataframe(agg_df)
-        plot_line_chart(agg_df, date_col, y_cols, title=f'{freq}ごとの合計')
-
-def perform_advanced_statistics(df):
-    st.subheader('高度な統計分析')
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    if not numeric_cols:
-        st.warning("数値列がありません。")
-        return
-
-    st.write('---')
-    st.markdown('#### **相関行列ヒートマップ**')
-    try:
-        if len(numeric_cols) > 1:
-            corr_matrix = df[numeric_cols].corr()
-            st.dataframe(corr_matrix)
-            # st.plotly_chart(px.imshow(corr_matrix)) # plotlyは簡易版では使用不可
-        else:
-            st.warning('相関行列を計算するには、複数の数値列が必要です。')
-    except Exception as e:
-        st.error(f'相関行列の計算中にエラーが発生しました: {e}')
+# 実際のアプリケーションでは、これらのファイルが同じディレクトリにあることを確認してください。
+from components.graph_plotter import (
+    plot_line_chart,
+    plot_bar_chart,
+    plot_stacked_bar_chart,
+    plot_scatter_plot,
+    plot_heatmap,
+    plot_pie_chart,
+    plot_box_plot,
+    plot_histogram,
+    PLOTLY_TEMPLATES
+)
+from components.data_processor import (
+    load_and_combine_csv,
+    calculate_and_plot_average,
+    aggregate_and_plot_time_series,
+    perform_advanced_statistics
+)
 
 
 # --- 統合アプリケーションの開始 ---
@@ -204,32 +125,59 @@ if not df.empty:
     with viz_tab:
         graph_type = st.selectbox(
             '表示するグラフの種類を選択してください:',
-            ('選択してください', '折れ線グラフ', '棒グラフ', '積み立てグラフ', '散布図', 'ヒートマップ')
+            ('選択してください', '折れ線グラフ', '棒グラフ', '積み立てグラフ', '散布図', 'ヒートマップ', '円グラフ', '箱ひげ図', 'ヒストグラム')
         )
+        
         if graph_type != '選択してください':
             st.write(f'**{graph_type} の設定**')
             columns = df.columns.tolist()
+
+            # 共通のグラフ設定
+            title = st.text_input('グラフのタイトル', value='')
+            col_labels, col_theme = st.columns(2)
+            with col_labels:
+                x_label = st.text_input('X軸のラベル (任意)', value='')
+                y_label = st.text_input('Y軸のラベル (任意)', value='')
+            with col_theme:
+                color_theme = st.selectbox('カラーテーマを選択', PLOTLY_TEMPLATES, index=6)
+
+            # グラフごとの固有設定
             if graph_type in ['折れ線グラフ', '棒グラフ', '積み立てグラフ']:
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_cols = st.multiselect('Y軸に使う列を1つ以上選択してください:', columns)
                 if x_axis_col and y_axis_cols:
                     if graph_type == '折れ線グラフ':
-                        plot_line_chart(df, x_axis_col, y_axis_cols)
+                        plot_line_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
                     elif graph_type == '棒グラフ':
-                        plot_bar_chart(df, x_axis_col, y_axis_cols[0])
+                        plot_bar_chart(df, x_axis_col, y_axis_cols[0], title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
                     elif graph_type == '積み立てグラフ':
-                        plot_stacked_bar_chart(df, x_axis_col, y_axis_cols)
+                        plot_stacked_bar_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
             elif graph_type == '散布図':
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_col = st.selectbox('Y軸に使う列を選択してください:', columns)
+                color_col = st.selectbox('色分けに使う列 (任意)', [''] + columns)
                 if x_axis_col and y_axis_col:
-                    plot_scatter_plot(df, x_axis_col, y_axis_col)
+                    plot_scatter_plot(df, x_axis_col, y_axis_col, color_col=color_col if color_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
             elif graph_type == 'ヒートマップ':
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_col = st.selectbox('Y軸に使う列を選択してください:', columns)
                 z_axis_col = st.selectbox('値を表すZ軸に使う列を選択してください (任意):', [''] + columns)
                 if x_axis_col and y_axis_col:
-                    plot_heatmap(df, x_axis_col, y_axis_col, z_axis_col)
+                    plot_heatmap(df, x_axis_col, y_axis_col, z_col=z_axis_col if z_axis_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+            elif graph_type == '円グラフ':
+                names_col = st.selectbox('カテゴリを表す列を選択してください:', columns)
+                values_col = st.selectbox('値を表す列を選択してください:', columns)
+                if names_col and values_col:
+                    plot_pie_chart(df, names_col, values_col, title=title, color_theme=color_theme)
+            elif graph_type == '箱ひげ図':
+                x_axis_col = st.selectbox('カテゴリを表す列を選択してください:', [''] + columns)
+                y_axis_col = st.selectbox('値を表す列を選択してください:', columns)
+                if y_axis_col:
+                    plot_box_plot(df, x_axis_col if x_axis_col else None, y_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+            elif graph_type == 'ヒストグラム':
+                x_axis_col = st.selectbox('列を選択してください:', columns)
+                if x_axis_col:
+                    plot_histogram(df, x_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
 
     with analysis_tab:
         analysis_type = st.selectbox(

@@ -27,7 +27,7 @@ def plot_line_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, c
             fig = px.line(df, x=x_col, y=y_col,
                           title=title if title else f'{y_col} vs {x_col} の折れ線グラフ',
                           labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=0.5)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"折れ線グラフのY軸に有効な列が選択されていません。")
@@ -46,7 +46,7 @@ def plot_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, co
             fig = px.bar(df, x=x_col, y=y_col,
                          title=title if title else f'{y_col} vs {x_col} の棒グラフ',
                          labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=0.5)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"棒グラフのY軸に有効な列が選択されていません。")
@@ -66,7 +66,7 @@ def plot_stacked_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=
         fig = px.bar(df_melted, x=x_col, y="Value", color="MetricType",
                      title=title if title else f'{x_col}に対する積み立てグラフ',
                      barmode='stack', labels=labels, template=color_theme)
-        fig.update_layout(title_x=0.5) # ここを追加
+        fig.update_layout(title_x=0.5)
         st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
@@ -83,7 +83,7 @@ def plot_scatter_plot(df, x_col, y_col, color_col=None, title=None, x_label=None
         fig = px.scatter(df, x=x_col, y=y_col, color=color_col,
                          title=title if title else f'{y_col} vs {x_col} の散布図',
                          labels=labels, template=color_theme)
-        fig.update_layout(title_x=0.5) # ここを追加
+        fig.update_layout(title_x=0.5)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("散布図のX軸とY軸に有効な列を選択してください。")
@@ -99,7 +99,7 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
             fig = px.density_heatmap(df, x=x_col, y=y_col, z=z_col,
                                      title=title if title else f'ヒートマップ ({z_col} by {x_col}, {y_col})',
                                      labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=0.5)
         else:
             st.info("ヒートマップには、通常X, Y軸に加え、色付けする値 (Z軸) が必要です。Z軸が選択されていないため、数値列の相関ヒートマップを表示します。")
             numeric_df = df.select_dtypes(include=['number'])
@@ -108,8 +108,7 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
                 fig = px.imshow(corr, text_auto=True, aspect="auto",
                                  title=title if title else "数値列の相関ヒートマップ",
                                  template=color_theme)
-                fig.update_layout(title_x=0.5) # ここを追加
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_layout(title_x=0.5)
             else:
                 st.warning("ヒートマップを描画するための数値列が見つかりません。")
                 return
@@ -117,3 +116,44 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("ヒートマップのX軸とY軸に有効な列を選択してください。")
+
+# 新しいグラフの追加
+def plot_pie_chart(df, names_col, values_col, title=None, color_theme=None):
+    """円グラフを描画します。"""
+    st.subheader('円グラフ')
+    if names_col and values_col:
+        fig = px.pie(df, names=names_col, values=values_col,
+                     title=title if title else f'{names_col}ごとの{values_col}の割合',
+                     template=color_theme)
+        fig.update_layout(title_x=0.5)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("円グラフのカテゴリと値の列を選択してください。")
+
+def plot_box_plot(df, x_col, y_col, title=None, x_label=None, y_label=None, color_theme=None):
+    """箱ひげ図を描画します。"""
+    st.subheader('箱ひげ図')
+    if y_col:
+        labels = {x_col: x_label if x_label else x_col,
+                  y_col: y_label if y_label else y_col}
+        fig = px.box(df, x=x_col, y=y_col,
+                     title=title if title else f'{x_col}ごとの{y_col}の分布',
+                     labels=labels, template=color_theme)
+        fig.update_layout(title_x=0.5)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("箱ひげ図の値を表す列を選択してください。")
+
+def plot_histogram(df, x_col, title=None, x_label=None, y_label=None, color_theme=None):
+    """ヒストグラムを描画します。"""
+    st.subheader('ヒストグラム')
+    if x_col:
+        labels = {x_col: x_label if x_label else x_col,
+                  'count': y_label if y_label else '度数'}
+        fig = px.histogram(df, x=x_col,
+                           title=title if title else f'{x_col}のヒストグラム',
+                           labels=labels, template=color_theme)
+        fig.update_layout(title_x=0.5)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("ヒストグラムの列を選択してください。")
