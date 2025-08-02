@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 # --- Plotlyのカラーテーマリストの定義 ---
 PLOTLY_TEMPLATES = [
@@ -156,3 +157,27 @@ def plot_histogram(df, x_col, title=None, x_label=None, y_label=None, color_them
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("ヒストグラムの列を選択してください。")
+
+def plot_correlation_heatmap(df):
+    """相関行列のヒートマップを描画します。"""
+    st.subheader('相関行列ヒートマップ')
+    try:
+        numeric_df = df.select_dtypes(include=np.number)
+        if not numeric_df.empty and len(numeric_df.columns) > 1:
+            corr_matrix = numeric_df.corr()
+            st.write(f"以下の**{len(corr_matrix)}**個の数値列間の相関行列を表示します:")
+            st.dataframe(corr_matrix, use_container_width=True)
+            
+            fig = px.imshow(
+                corr_matrix, 
+                text_auto=True, 
+                aspect="auto", 
+                title='数値列間の相関行列',
+                color_continuous_scale=px.colors.sequential.Viridis
+            )
+            fig.update_layout(xaxis_nticks=len(corr_matrix.columns), yaxis_nticks=len(corr_matrix.index))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning('相関行列を計算するには、複数の数値列が必要です。')
+    except Exception as e:
+        st.error(f'相関行列の計算中にエラーが発生しました: {e}')

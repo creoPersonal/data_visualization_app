@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 
 # componentsから必要な関数をインポート
@@ -16,10 +17,11 @@ from components.graph_plotter import (
     plot_pie_chart,
     plot_box_plot,
     plot_histogram,
+    plot_correlation_heatmap, # 新しくインポート
     PLOTLY_TEMPLATES
 )
 from components.analysis_functions import (
-    calculate_and_plot_average,
+    # calculate_and_plot_average, # 削除
     aggregate_and_plot_time_series,
     perform_advanced_statistics
 )
@@ -139,15 +141,15 @@ if not df.empty:
     with analysis_tab:
         analysis_type = st.selectbox(
             '実行する分析を選択してください:',
-            ('選択してください', '選択した列の平均値', '時系列データ集計と可視化', '高度な統計分析')
+            ('選択してください', '時系列データ集計と可視化', '高度な統計分析', '相関行列ヒートマップ')
         )
-        if analysis_type == '選択した列の平均値':
-            calculate_and_plot_average(df)
-        elif analysis_type == '時系列データ集計と可視化':
+        if analysis_type == '時系列データ集計と可視化':
             aggregate_and_plot_time_series(df)
         elif analysis_type == '高度な統計分析':
             perform_advanced_statistics(df)
-
+        elif analysis_type == '相関行列ヒートマップ':
+            plot_correlation_heatmap(df)
+                
     with ai_tab:
         # AIインサイトUIの呼び出し
         display_ai_insights(df)
