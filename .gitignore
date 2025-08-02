@@ -4,7 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 venv/
 .streamlit/
-.env # もし環境変数ファイルを使う場合
+.env 
 
 # Streamlit
 .streamlit/

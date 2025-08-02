@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 # --- Plotlyのカラーテーマリストの定義 ---
 PLOTLY_TEMPLATES = [
@@ -11,9 +12,9 @@ PLOTLY_TEMPLATES = [
 ]
 
 # --- グラフ描画関数の変更 ---
-# 各関数に title, x_label, y_label, color_theme 引数を追加
+# 各関数に title, x_label, y_label, color_theme, title_x_pos 引数を追加
 
-def plot_line_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None):
+def plot_line_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
     """折れ線グラフを描画します。"""
     st.subheader('折れ線グラフ')
     if not isinstance(y_cols, list):
@@ -27,13 +28,13 @@ def plot_line_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, c
             fig = px.line(df, x=x_col, y=y_col,
                           title=title if title else f'{y_col} vs {x_col} の折れ線グラフ',
                           labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=title_x_pos)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"折れ線グラフのY軸に有効な列が選択されていません。")
 
 
-def plot_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None):
+def plot_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
     """棒グラフを描画します。"""
     st.subheader('棒グラフ')
     if not isinstance(y_cols, list):
@@ -46,12 +47,12 @@ def plot_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, co
             fig = px.bar(df, x=x_col, y=y_col,
                          title=title if title else f'{y_col} vs {x_col} の棒グラフ',
                          labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=title_x_pos)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning(f"棒グラフのY軸に有効な列が選択されていません。")
 
-def plot_stacked_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None):
+def plot_stacked_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
     """積み立て棒グラフを描画します。"""
     st.subheader('積み立て棒グラフ')
     if not y_cols:
@@ -66,7 +67,7 @@ def plot_stacked_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=
         fig = px.bar(df_melted, x=x_col, y="Value", color="MetricType",
                      title=title if title else f'{x_col}に対する積み立てグラフ',
                      barmode='stack', labels=labels, template=color_theme)
-        fig.update_layout(title_x=0.5) # ここを追加
+        fig.update_layout(title_x=title_x_pos)
         st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
@@ -74,7 +75,7 @@ def plot_stacked_bar_chart(df, x_col, y_cols, title=None, x_label=None, y_label=
         st.info("選択した列が数値データであり、積み立てに適した形式か確認してください。")
 
 
-def plot_scatter_plot(df, x_col, y_col, color_col=None, title=None, x_label=None, y_label=None, color_theme=None):
+def plot_scatter_plot(df, x_col, y_col, color_col=None, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
     """散布図を描画します。"""
     st.subheader('散布図')
     if x_col and y_col:
@@ -83,12 +84,12 @@ def plot_scatter_plot(df, x_col, y_col, color_col=None, title=None, x_label=None
         fig = px.scatter(df, x=x_col, y=y_col, color=color_col,
                          title=title if title else f'{y_col} vs {x_col} の散布図',
                          labels=labels, template=color_theme)
-        fig.update_layout(title_x=0.5) # ここを追加
+        fig.update_layout(title_x=title_x_pos)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("散布図のX軸とY軸に有効な列を選択してください。")
 
-def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label=None, color_theme=None):
+def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
     """ヒートマップを描画します。"""
     st.subheader('ヒートマップ')
     if x_col and y_col:
@@ -99,7 +100,7 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
             fig = px.density_heatmap(df, x=x_col, y=y_col, z=z_col,
                                      title=title if title else f'ヒートマップ ({z_col} by {x_col}, {y_col})',
                                      labels=labels, template=color_theme)
-            fig.update_layout(title_x=0.5) # ここを追加
+            fig.update_layout(title_x=title_x_pos)
         else:
             st.info("ヒートマップには、通常X, Y軸に加え、色付けする値 (Z軸) が必要です。Z軸が選択されていないため、数値列の相関ヒートマップを表示します。")
             numeric_df = df.select_dtypes(include=['number'])
@@ -108,8 +109,7 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
                 fig = px.imshow(corr, text_auto=True, aspect="auto",
                                  title=title if title else "数値列の相関ヒートマップ",
                                  template=color_theme)
-                fig.update_layout(title_x=0.5) # ここを追加
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_layout(title_x=title_x_pos)
             else:
                 st.warning("ヒートマップを描画するための数値列が見つかりません。")
                 return
@@ -117,3 +117,67 @@ def plot_heatmap(df, x_col, y_col, z_col=None, title=None, x_label=None, y_label
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("ヒートマップのX軸とY軸に有効な列を選択してください。")
+
+def plot_pie_chart(df, names_col, values_col, title=None, color_theme=None, title_x_pos=0.5):
+    """円グラフを描画します。"""
+    st.subheader('円グラフ')
+    if names_col and values_col:
+        fig = px.pie(df, names=names_col, values=values_col,
+                     title=title if title else f'{names_col}ごとの{values_col}の割合',
+                     template=color_theme)
+        fig.update_layout(title_x=title_x_pos)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("円グラフのカテゴリと値の列を選択してください。")
+
+def plot_box_plot(df, x_col, y_col, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
+    """箱ひげ図を描画します。"""
+    st.subheader('箱ひげ図')
+    if y_col:
+        labels = {x_col: x_label if x_label else x_col,
+                  y_col: y_label if y_label else y_col}
+        fig = px.box(df, x=x_col, y=y_col,
+                     title=title if title else f'{x_col}ごとの{y_col}の分布',
+                     labels=labels, template=color_theme)
+        fig.update_layout(title_x=title_x_pos)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("箱ひげ図の値を表す列を選択してください。")
+
+def plot_histogram(df, x_col, title=None, x_label=None, y_label=None, color_theme=None, title_x_pos=0.5):
+    """ヒストグラムを描画します。"""
+    st.subheader('ヒストグラム')
+    if x_col:
+        labels = {x_col: x_label if x_label else x_col,
+                  'count': y_label if y_label else '度数'}
+        fig = px.histogram(df, x=x_col,
+                           title=title if title else f'{x_col}のヒストグラム',
+                           labels=labels, template=color_theme)
+        fig.update_layout(title_x=title_x_pos)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("ヒストグラムの列を選択してください。")
+
+def plot_correlation_heatmap(df):
+    """相関行列のヒートマップを描画します。"""
+    st.subheader('相関行列ヒートマップ')
+    try:
+        numeric_df = df.select_dtypes(include=np.number)
+        if not numeric_df.empty and len(numeric_df.columns) > 1:
+            corr_matrix = numeric_df.corr()
+            st.write(f"以下の**{len(corr_matrix)}**個の数値列間の相関行列を表示します:")
+            st.dataframe(corr_matrix, use_container_width=True)
+            
+            fig = px.imshow(
+                corr_matrix, 
+                text_auto=True, 
+                aspect="auto", 
+                title='数値列間の相関行列',
+                color_continuous_scale=px.colors.sequential.Viridis
+            )
+            fig.update_layout(xaxis_nticks=len(corr_matrix.columns), yaxis_nticks=len(corr_matrix.index))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning('相関行列を計算するには、複数の数値列が必要です。')
+    except Exception as e:
+        st.error(f'相関行列の計算中にエラーが発生しました: {e}')
