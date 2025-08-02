@@ -1,12 +1,12 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
-import base64
 
 # componentsから必要な関数をインポート
-# 実際のアプリケーションでは、これらのファイルが同じディレクトリにあることを確認してください。
+from components.data_uploader import display_data_uploader_and_editor
+from components.data_type_converter import display_data_type_converter
+from components.data_filtering import display_data_filtering
 from components.graph_plotter import (
     plot_line_chart,
     plot_bar_chart,
@@ -18,59 +18,29 @@ from components.graph_plotter import (
     plot_histogram,
     PLOTLY_TEMPLATES
 )
-from components.data_processor import (
-    load_and_combine_csv,
+from components.analysis_functions import (
     calculate_and_plot_average,
     aggregate_and_plot_time_series,
     perform_advanced_statistics
 )
-
+from components.ai_insights import display_ai_insights
 
 # --- 統合アプリケーションの開始 ---
 st.set_page_config(layout="wide")
 st.title('統合データ処理アプリ')
 
-# --- データの入力・アップロードセクション ---
+# セッション状態を初期化
+if 'data_df' not in st.session_state:
+    st.session_state.data_df = pd.DataFrame()
+if 'ai_analysis_triggered' not in st.session_state:
+    st.session_state.ai_analysis_triggered = False
+if 'ai_insight_text' not in st.session_state:
+    st.session_state.ai_insight_text = None
+
+# 1. データの入力とアップロード
 st.header('1. データの入力とアップロード')
 st.write('以下のいずれかの方法でデータを準備してください。')
-
-upload_tab, editor_tab = st.tabs(["CSVファイルのアップロード", "テーブルでデータを直接入力"])
-
-with upload_tab:
-    uploaded_files = st.file_uploader("CSVファイルを選択", type=["csv"], accept_multiple_files=True)
-    if uploaded_files:
-        try:
-            df = load_and_combine_csv(uploaded_files)
-            st.session_state.data_df = df
-            st.success(f'{len(uploaded_files)} 個のファイルをアップロードし、結合が完了しました！')
-        except Exception as e:
-            st.error(f"ファイル読み込みエラー: {e}")
-            st.session_state.data_df = pd.DataFrame()
-    else:
-        st.info('CSVファイルをアップロードしてください。')
-
-with editor_tab:
-    if 'data_df' not in st.session_state or st.session_state.data_df.empty:
-        sample_data_for_editor = {
-            'Date': [datetime.now().date() - timedelta(days=i) for i in range(5)][::-1],
-            'Product_A_Sales': [100, 105, 110, 95, 120],
-            'Product_B_Sales': [50, 52, 55, 48, 60],
-            'Customer_Rating': [4.5, 4.6, 4.7, 4.4, 4.8],
-            'Region': ['East', 'West', 'East', 'Central', 'West'],
-            'Category': ['A', 'B', 'A', 'A', 'B'],
-            'Sales_Target': [110, 55, 115, 100, 65],
-            'Customer_Satisfaction': [85, 92, 78, 95, 88]
-        }
-        st.session_state.data_df = pd.DataFrame(sample_data_for_editor)
-    
-    edited_df = st.data_editor(
-        st.session_state.data_df,
-        num_rows="dynamic",
-        use_container_width=True,
-        key='editor_table'
-    )
-    st.session_state.data_df = edited_df
-
+display_data_uploader_and_editor()
 df = st.session_state.data_df.copy()
 
 if not df.empty:
@@ -89,43 +59,24 @@ if not df.empty:
         mime='text/csv',
     )
     
+    # 2. データ型の調整 (オプション)
     st.markdown('---')
     st.subheader('2. データ型の調整 (オプション)')
-    st.write('もし日付や数値の列が正しく認識されていない場合、ここで手動で変換を試みてください。')
+    display_data_type_converter(df)
+    df = st.session_state.data_df.copy()
 
-    current_cols = df.columns.tolist()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        selected_col_for_type_conversion = st.selectbox('型を変換したい列を選択:', [''] + current_cols, key='type_conv_col_select')
-    with col2:
-        conversion_type = st.selectbox('変換する型を選択:', ['選択してください', '日付/時刻', '数値'], key='conversion_type_select')
-
-    if selected_col_for_type_conversion and conversion_type != '選択してください':
-        if st.button(f"選択した列 '{selected_col_for_type_conversion}' を '{conversion_type}' に変換"):
-            try:
-                if conversion_type == '日付/時刻':
-                    df[selected_col_for_type_conversion] = pd.to_datetime(df[selected_col_for_type_conversion], errors='coerce', infer_datetime_format=True)
-                    st.session_state.data_df = df
-                    st.success(f"列'{selected_col_for_type_conversion}'を日付/時刻型に変換しました。")
-                elif conversion_type == '数値':
-                    df[selected_col_for_type_conversion] = pd.to_numeric(df[selected_col_for_type_conversion], errors='coerce')
-                    st.session_state.data_df = df
-                    st.success(f"列'{selected_col_for_type_conversion}'を数値型に変換しました。")
-                
-                st.write('変換後のデータ型:')
-                st.write(df.dtypes)
-                st.dataframe(df.head())
-            except Exception as e:
-                st.error(f"型の変換中にエラーが発生しました: {e}")
-
+    # 3. データ可視化と分析
     st.markdown('---')
     st.subheader('3. データ可視化と分析')
     st.write('---')
 
-    viz_tab, analysis_tab = st.tabs(["グラフ描画", "データ分析"])
+    viz_tab, analysis_tab, ai_tab = st.tabs(["グラフ描画", "データ分析", "AIによるインサイト"])
 
     with viz_tab:
+        # フィルタリング機能の呼び出し
+        filtered_df = display_data_filtering(df)
+        df = filtered_df 
+
         graph_type = st.selectbox(
             '表示するグラフの種類を選択してください:',
             ('選択してください', '折れ線グラフ', '棒グラフ', '積み立てグラフ', '散布図', 'ヒートマップ', '円グラフ', '箱ひげ図', 'ヒストグラム')
@@ -137,13 +88,10 @@ if not df.empty:
 
             # 共通のグラフ設定
             col_settings_1, col_settings_2 = st.columns([1, 1])
-            
             with col_settings_1:
                 title = st.text_input('グラフのタイトル', value='')
-            
             with col_settings_2:
                 title_x_pos = st.slider('タイトルの位置', 0.0, 1.0, 0.5, 0.01)
-
             col_labels, col_theme = st.columns(2)
             with col_labels:
                 x_label = st.text_input('X軸のラベル (任意)', value='')
@@ -151,7 +99,6 @@ if not df.empty:
             with col_theme:
                 color_theme = st.selectbox('カラーテーマを選択', PLOTLY_TEMPLATES, index=6)
 
-            # グラフごとの固有設定
             if graph_type in ['折れ線グラフ', '棒グラフ', '積み立てグラフ']:
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_cols = st.multiselect('Y軸に使う列を1つ以上選択してください:', columns)
@@ -200,5 +147,10 @@ if not df.empty:
             aggregate_and_plot_time_series(df)
         elif analysis_type == '高度な統計分析':
             perform_advanced_statistics(df)
+
+    with ai_tab:
+        # AIインサイトUIの呼び出し
+        display_ai_insights(df)
+
 else:
     st.info('データを直接入力するか、CSVファイルをアップロードしてください。')
