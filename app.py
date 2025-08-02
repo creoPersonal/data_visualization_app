@@ -56,7 +56,10 @@ with editor_tab:
             'Product_A_Sales': [100, 105, 110, 95, 120],
             'Product_B_Sales': [50, 52, 55, 48, 60],
             'Customer_Rating': [4.5, 4.6, 4.7, 4.4, 4.8],
-            'Region': ['East', 'West', 'East', 'Central', 'West']
+            'Region': ['East', 'West', 'East', 'Central', 'West'],
+            'Category': ['A', 'B', 'A', 'A', 'B'],
+            'Sales_Target': [110, 55, 115, 100, 65],
+            'Customer_Satisfaction': [85, 92, 78, 95, 88]
         }
         st.session_state.data_df = pd.DataFrame(sample_data_for_editor)
     
@@ -133,7 +136,14 @@ if not df.empty:
             columns = df.columns.tolist()
 
             # 共通のグラフ設定
-            title = st.text_input('グラフのタイトル', value='')
+            col_settings_1, col_settings_2 = st.columns([1, 1])
+            
+            with col_settings_1:
+                title = st.text_input('グラフのタイトル', value='')
+            
+            with col_settings_2:
+                title_x_pos = st.slider('タイトルの位置', 0.0, 1.0, 0.5, 0.01)
+
             col_labels, col_theme = st.columns(2)
             with col_labels:
                 x_label = st.text_input('X軸のラベル (任意)', value='')
@@ -147,37 +157,37 @@ if not df.empty:
                 y_axis_cols = st.multiselect('Y軸に使う列を1つ以上選択してください:', columns)
                 if x_axis_col and y_axis_cols:
                     if graph_type == '折れ線グラフ':
-                        plot_line_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                        plot_line_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
                     elif graph_type == '棒グラフ':
-                        plot_bar_chart(df, x_axis_col, y_axis_cols[0], title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                        plot_bar_chart(df, x_axis_col, y_axis_cols[0], title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
                     elif graph_type == '積み立てグラフ':
-                        plot_stacked_bar_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                        plot_stacked_bar_chart(df, x_axis_col, y_axis_cols, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
             elif graph_type == '散布図':
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_col = st.selectbox('Y軸に使う列を選択してください:', columns)
                 color_col = st.selectbox('色分けに使う列 (任意)', [''] + columns)
                 if x_axis_col and y_axis_col:
-                    plot_scatter_plot(df, x_axis_col, y_axis_col, color_col=color_col if color_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                    plot_scatter_plot(df, x_axis_col, y_axis_col, color_col=color_col if color_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
             elif graph_type == 'ヒートマップ':
                 x_axis_col = st.selectbox('X軸に使う列を選択してください:', columns, index=0)
                 y_axis_col = st.selectbox('Y軸に使う列を選択してください:', columns)
                 z_axis_col = st.selectbox('値を表すZ軸に使う列を選択してください (任意):', [''] + columns)
                 if x_axis_col and y_axis_col:
-                    plot_heatmap(df, x_axis_col, y_axis_col, z_col=z_axis_col if z_axis_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                    plot_heatmap(df, x_axis_col, y_axis_col, z_col=z_axis_col if z_axis_col else None, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
             elif graph_type == '円グラフ':
                 names_col = st.selectbox('カテゴリを表す列を選択してください:', columns)
                 values_col = st.selectbox('値を表す列を選択してください:', columns)
                 if names_col and values_col:
-                    plot_pie_chart(df, names_col, values_col, title=title, color_theme=color_theme)
+                    plot_pie_chart(df, names_col, values_col, title=title, color_theme=color_theme, title_x_pos=title_x_pos)
             elif graph_type == '箱ひげ図':
                 x_axis_col = st.selectbox('カテゴリを表す列を選択してください:', [''] + columns)
                 y_axis_col = st.selectbox('値を表す列を選択してください:', columns)
                 if y_axis_col:
-                    plot_box_plot(df, x_axis_col if x_axis_col else None, y_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                    plot_box_plot(df, x_axis_col if x_axis_col else None, y_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
             elif graph_type == 'ヒストグラム':
                 x_axis_col = st.selectbox('列を選択してください:', columns)
                 if x_axis_col:
-                    plot_histogram(df, x_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme)
+                    plot_histogram(df, x_axis_col, title=title, x_label=x_label, y_label=y_label, color_theme=color_theme, title_x_pos=title_x_pos)
 
     with analysis_tab:
         analysis_type = st.selectbox(
